@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Química Secreta da Amazônia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-image: url('https://s2-g1.glbimg.com/4sqWXeqhi9IUhQgj9dLsZ7v-msc=/0x0:4320x3240/1008x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2017/B/6/80mbr2SBmfJ57iJUsOkg/petar-parque-estadual-turistico-do-alto-ribeira-sp-eduardo-lacerda-5-.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+        }
+
+        /* Overlay para escurecer o fundo e melhorar a legibilidade */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(26, 46, 39, 0.85); /* Verde escuro profundo com 85% de opacidade */
+            z-index: -1;
+        }
+
+        .card-bg {
+            background-color: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .btn-primary {
+            background-color: #d97706; /* Laranja/Âmbar */
+            color: #ffffff;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #b45309;
+        }
+        .btn-secondary {
+            background-color: #4d7c0f; /* Verde-oliva */
+            color: #ffffff;
+            transition: background-color 0.3s;
+        }
+        .btn-secondary:hover {
+            background-color: #365314;
+        }
+        .team-card {
+            background-color: #294239;
+        }
+        .hint-text {
+            min-height: 100px;
+        }
+        .revealed-info img {
+            border: 4px solid #fefce8; /* Amarelo muito claro */
+            object-fit: cover;
+            height: 250px;
+            width: 100%;
+        }
+        .points-button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 0.5rem;
+        }
+
+        /* --- Animação de Revelação --- */
+        @keyframes fadeInScaleUp {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .animate-reveal {
+            animation: fadeInScaleUp 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+        }
+    </style>
+</head>
+<body class="text-yellow-50 p-4 sm:p-6 md:p-8">
+
+    <div id="game-container" class="max-w-5xl mx-auto">
+        <!-- Cabeçalho -->
+        <header class="text-center mb-6">
+            <h1 class="text-4xl md:text-5xl font-bold text-yellow-300">Química Inorgânica da Amazônia</h1>
+            <p class="text-lg text-yellow-100 mt-2">Um Desafio de Ácidos, Bases e Sais</p>
+        </header>
+
+        <!-- Placar -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-center">
+            <div class="team-card p-4 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold text-green-300">Grupo 1</h2>
+                <p id="score-team1" class="text-5xl font-bold mt-2">0</p>
+            </div>
+            <div class="team-card p-4 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold text-blue-300">Grupo 2</h2>
+                <p id="score-team2" class="text-5xl font-bold mt-2">0</p>
+            </div>
+        </div>
+
+        <!-- Área Principal do Jogo -->
+        <main id="main-game-area" class="card-bg p-6 rounded-lg shadow-2xl">
+            
+            <!-- Área de Dicas -->
+            <div id="hint-area">
+                <h3 class="text-2xl font-semibold text-center mb-4">Substância Secreta <span id="round-number">1</span> de <span id="total-rounds"></span></h3>
+                <div class="bg-black bg-opacity-20 p-4 rounded-md hint-text flex items-center justify-center">
+                    <p id="hint-text" class="text-lg text-center italic">Clique em "Iniciar Rodada" para ver a primeira dica.</p>
+                </div>
+                <div class="flex justify-center mt-4">
+                    <button id="next-hint-btn" class="btn-primary font-bold py-2 px-6 rounded-lg shadow-md" disabled>Próxima Dica</button>
+                </div>
+            </div>
+
+            <!-- Área da Resposta Revelada -->
+            <div id="reveal-area" class="hidden text-center">
+                <h3 id="material-name" class="text-3xl font-bold text-yellow-300 mb-2"></h3>
+                <p id="material-formula" class="text-2xl font-mono text-gray-300 mb-4"></p>
+                <img id="material-image" src="" alt="Imagem da substância secreta" class="mx-auto rounded-lg shadow-lg max-w-sm w-full mb-4" onerror="this.onerror=null;this.src='https://placehold.co/400x400/1a2e27/fefce8?text=Imagem+Indisponível';">
+                <p id="material-info" class="text-base mb-6 max-w-2xl mx-auto"></p>
+                
+                <!-- Controles de Pontuação -->
+                <div id="scoring-controls" class="mb-6">
+                    <p class="font-semibold mb-2">Quem acertou? Adicione os pontos:</p>
+                    <div class="flex flex-col md:flex-row gap-4 justify-center">
+                        <!-- Pontos Grupo 1 -->
+                        <div class="flex-1">
+                            <h4 class="text-lg font-bold text-green-300 mb-2">Grupo 1</h4>
+                            <div class="points-button-grid">
+                                <button onclick="addScore(1, 5)" class="btn-secondary py-1 px-2 rounded">+5 pts</button>
+                                <button onclick="addScore(1, 4)" class="btn-secondary py-1 px-2 rounded">+4 pts</button>
+                                <button onclick="addScore(1, 3)" class="btn-secondary py-1 px-2 rounded">+3 pts</button>
+                                <button onclick="addScore(1, 2)" class="btn-secondary py-1 px-2 rounded">+2 pts</button>
+                                <button onclick="addScore(1, 1)" class="btn-secondary py-1 px-2 rounded">+1 pt</button>
+                            </div>
+                        </div>
+                        <!-- Pontos Grupo 2 -->
+                        <div class="flex-1">
+                            <h4 class="text-lg font-bold text-blue-300 mb-2">Grupo 2</h4>
+                            <div class="points-button-grid">
+                                <button onclick="addScore(2, 5)" class="btn-secondary py-1 px-2 rounded">+5 pts</button>
+                                <button onclick="addScore(2, 4)" class="btn-secondary py-1 px-2 rounded">+4 pts</button>
+                                <button onclick="addScore(2, 3)" class="btn-secondary py-1 px-2 rounded">+3 pts</button>
+                                <button onclick="addScore(2, 2)" class="btn-secondary py-1 px-2 rounded">+2 pts</button>
+                                <button onclick="addScore(2, 1)" class="btn-secondary py-1 px-2 rounded">+1 pt</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="next-round-btn" class="btn-primary font-bold py-2 px-6 rounded-lg shadow-md">Próxima Rodada</button>
+            </div>
+
+        </main>
+
+        <!-- Controles Gerais -->
+        <footer class="text-center mt-6">
+             <button id="reveal-answer-btn" class="btn-secondary font-bold py-2 px-5 rounded-lg shadow-md mr-4" disabled>Revelar Resposta</button>
+            <button id="restart-game-btn" class="text-yellow-200 hover:text-white underline">Reiniciar Jogo</button>
+        </footer>
+
+    </div>
+
+    <script>
+        // --- BANCO DE DADOS DAS SUBSTÂNCIAS ---
+        const substancias = [
+            {
+                nome: "Ácido Carbônico",
+                formula: "H₂CO₃",
+                imagem: "https://s1.static.brasilescola.uol.com.br/be/2020/01/refrigerante.jpg",
+                info: "É um ácido fraco e instável, formado pela dissolução de dióxido de carbono (CO₂) na água. Nos rios da Amazônia, ele se forma naturalmente, influenciando o pH da água.",
+                dicas: [
+                    "Eu só existo quando um gás (CO₂) está dissolvido em água.",
+                    "Sou o que dá o sabor levemente 'picante' em bebidas com gás.",
+                    "Pertenço à função dos ÁCIDOS. Sou fraco e me decomponho facilmente em gás e água.",
+                    "Na natureza, ajudo a determinar a acidez da chuva e dos rios.",
+                    "Minha fórmula é o resultado da reação da água (H₂O) com o gás carbônico (CO₂)."
+                ]
+            },
+            {
+                nome: "Hidróxido de Alumínio",
+                formula: "Al(OH)₃",
+                imagem: "https://www.vale.com/documents/d/guest/img-bauxita-paragominas-2",
+                info: "É o principal componente da bauxita, um minério muito abundante na Amazônia. É uma base insolúvel de onde se extrai o alumínio metálico.",
+                dicas: [
+                    "Sou um sólido branco encontrado em grandes depósitos de um minério avermelhado na Amazônia.",
+                    "Sou a matéria-prima para a fabricação de um metal leve e muito utilizado.",
+                    "Pertenço à função das BASES. Sou praticamente insolúvel em água.",
+                    "A mineração do meu minério é uma atividade econômica importante na região amazônica.",
+                    "Minha fórmula contém um átomo de Alumínio e três grupos hidroxila (OH)."
+                ]
+            },
+            {
+                nome: "Cloreto de Sódio",
+                formula: "NaCl",
+                imagem: "https://s2.static.brasilescola.uol.com.br/be/2025/03/frasco-com-sal-de-cozinha-cloreto-de-sodio.jpg",
+                info: "'Lambedouros' são afloramentos de argila ricos em sais, especialmente o cloreto de sódio. Animais como antas e araras frequentam esses locais para ingerir essa substância, pois é essencial para seu metabolismo.",
+                dicas: [
+                    "Sou um sólido cristalino encontrado em paredões de argila no meio da floresta.",
+                    "A fauna amazônica me procura para complementar sua dieta e obter nutrientes.",
+                    "Pertenço à função dos SAIS e sou o mesmo composto usado para temperar sua comida.",
+                    "Os locais onde sou encontrado são chamados de 'lambedouros'.",
+                    "Minha fórmula é a união do Sódio (Na) e do Cloro (Cl)."
+                ]
+            },
+            {
+                nome: "Hidróxido de Ferro (III)",
+                formula: "Fe(OH)₃",
+                imagem: "https://upload.wikimedia.org/wikipedia/commons/5/5d/Hydroxid_%C5%BEelezit%C3%BD.PNG",
+                info: "Esta base insolúvel é um dos principais responsáveis pela cor vermelha ou amarelada dos solos amazônicos, conhecidos como latossolos. É formada pela reação do ferro com água e oxigênio.",
+                dicas: [
+                    "Sou um sólido que dá a cor de 'barro' ou 'ferrugem' para o solo.",
+                    "Estou presente em praticamente todo o chão da floresta amazônica.",
+                    "Pertenço à função das BASES. Sou insolúvel e formado por um metal de transição.",
+                    "Sou o resultado da 'ferrugem' que ocorre naturalmente com o ferro presente no solo.",
+                    "Minha fórmula contém um átomo de Ferro e três grupos hidroxila (OH)."
+                ]
+            },
+            {
+                nome: "Hidróxido de Magnésio",
+                formula: "Mg(OH)₂",
+                imagem: "https://product-data.raiadrogasil.io/images/3823109.webp",
+                info: "É uma base fraca, mais conhecida comercialmente como 'Leite de Magnésia'. É vendido como uma suspensão branca e usado como antiácido (para combater a azia) e também como laxante.",
+                dicas: [
+                    "Sou vendido em farmácias como um líquido branco e espesso.",
+                    "Meu principal uso é para aliviar a queimação no estômago, pois neutralizo o excesso de acidez.",
+                    "Pertenço à função das BASES, mas sou considerada fraca e por isso posso ser ingerida.",
+                    "Minha ação antiácida é um exemplo clássico de uma reação de neutralização.",
+                    "Minha fórmula contém um átomo de Magnésio e dois grupos hidroxila (OH)."
+                ]
+            },
+            {
+                nome: "Bicarbonato de Sódio",
+                formula: "NaHCO₃",
+                imagem: "https://www.quimica.com.br/wp-content/uploads/2023/03/bicarbonato-de-sodio-705x470.jpg",
+                info: "É um sal com características básicas, muito versátil. Usado na culinária como fermento químico, como antiácido, em produtos de limpeza e até em alguns talcos para os pés.",
+                dicas: [
+                    "Sou um pó branco, fino e solúvel em água.",
+                    "Na cozinha, sou usado para fazer bolos crescerem, pois libero gás carbônico quando aquecido.",
+                    "Pertenço à função dos SAIS, mas meu comportamento em água é levemente básico.",
+                    "Posso ser usado como um antiácido caseiro para aliviar a azia.",
+                    "Minha fórmula longa contém Sódio, Hidrogênio, Carbono e Oxigênio."
+                ]
+            },
+            {
+                nome: "Ácido Nítrico",
+                formula: "HNO₃",
+                imagem: "https://upload.wikimedia.org/wikipedia/commons/b/b4/Nitric_acid_resonance_median.png",
+                info: "Um ácido forte que se forma naturalmente na atmosfera durante tempestades com muitos raios. A energia do raio faz o nitrogênio e o oxigênio do ar reagirem, e o produto final, ao se dissolver na chuva, chega ao solo como um fertilizante natural.",
+                dicas: [
+                    "Eu me formo no céu, durante tempestades com muitos relâmpagos.",
+                    "Chego ao solo da floresta através da chuva, ajudando a nutrir as plantas.",
+                    "Pertenço à função dos ÁCIDOS. Sou um ácido forte e corrosivo.",
+                    "Minha formação é um passo importante para 'fixar' o nitrogênio do ar e torná-lo útil para as plantas.",
+                    "Minha fórmula contém Hidrogênio, Nitrogênio e Oxigênio."
+                ]
+            },
+            {
+                nome: "Hidróxido de Amônio",
+                formula: "NH₄OH",
+                imagem: "https://thumbs.dreamstime.com/b/hidr%C3%B3xido-de-am%C3%B4nio-d-renderiza%C3%A7%C3%A3o-da-estrutura-molecular-do-isolado-sobre-os-fundos-brancos-s%C3%A3o-representados-como-esferas-212807978.jpg",
+                info: "Uma base fraca formada quando a amônia (NH₃), liberada na decomposição de matéria orgânica (folhas, animais), se dissolve na água do solo. É parte fundamental do ciclo do nitrogênio na floresta.",
+                dicas: [
+                    "Eu me formo quando um gás de cheiro muito forte e irritante se dissolve na água.",
+                    "Estou envolvido no processo de decomposição e na ciclagem de nutrientes no solo da floresta.",
+                    "Pertenço à função das BASES. Sou uma base fraca e instável.",
+                    "Sou importante para que as plantas possam absorver o nitrogênio do solo.",
+                    "Minha fórmula é a união do íon amônio (NH₄⁺) com o íon hidroxila (OH⁻)."
+                ]
+            },
+            {
+                nome: "Nitrato de Potássio",
+                formula: "KNO₃",
+                imagem: "https://www.embrapa.br/documents/1355163/1971166/CENA_terra_preta_de_%C3%ADndio_001.jpg/03bdfc35-263a-2325-1e3c-8a9d1d1f0340?t=1528913959000",
+                info: "Um sal muito presente na 'Terra Preta de Índio', um solo amazônico extremamente fértil criado por povos antigos. Este sal é um excelente fertilizante natural, fornecendo nitrogênio e potássio para as plantas.",
+                dicas: [
+                    "Sou um sal branco e cristalino encontrado em um tipo de solo muito especial e fértil da Amazônia.",
+                    "Minha presença torna a 'Terra Preta de Índio' ideal para a agricultura.",
+                    "Pertenço à função dos SAIS. Sou um ótimo fertilizante.",
+                    "Forneço dois elementos químicos essenciais para o crescimento de qualquer planta.",
+                    "Minha fórmula une o Potássio (K), o Nitrogênio (N) e o Oxigênio (O)."
+                ]
+            },
+            {
+                nome: "Carbonato de Cálcio",
+                formula: "CaCO₃",
+                imagem: "https://upload.wikimedia.org/wikipedia/commons/8/86/Aru%C3%A1-do-mato_%28Megalobulimus_sp.%29_by_Carlos_Peres.jpg",
+                info: "Principal componente das conchas de caramujos e dos esqueletos de corais em rios. Também forma as rochas calcárias em cavernas da região. Sua decomposição ajuda a neutralizar a acidez do solo.",
+                dicas: [
+                    "Sou o principal material que forma a 'casa' de muitos caramujos e conchas dos rios.",
+                    "Sou um sólido branco e duro, mas posso ser dissolvido lentamente por ácidos.",
+                    "Pertenço à função dos SAIS. Sou formado por um metal alcalino-terroso e um ânion.",
+                    "Minha decomposição no solo ajuda a diminuir a acidez, tornando-o mais fértil.",
+                    "Minha fórmula contém Cálcio (Ca), Carbono (C) e Oxigênio (O)."
+                ]
+            }
+        ];
+
+        // --- VARIÁVEIS DO JOGO ---
+        let scoreTeam1 = 0;
+        let scoreTeam2 = 0;
+        let currentRound = 0;
+        let hintIndex = 0;
+        let currentSubstance = null;
+        let availableSubstances = [];
+        const totalSubstances = substancias.length;
+
+        // --- ELEMENTOS DO DOM ---
+        const score1El = document.getElementById('score-team1');
+        const score2El = document.getElementById('score-team2');
+        const roundNumberEl = document.getElementById('round-number');
+        const totalRoundsEl = document.getElementById('total-rounds');
+        const hintTextEl = document.getElementById('hint-text');
+        const nextHintBtn = document.getElementById('next-hint-btn');
+        const revealAnswerBtn = document.getElementById('reveal-answer-btn');
+        const restartGameBtn = document.getElementById('restart-game-btn');
+        const nextRoundBtn = document.getElementById('next-round-btn');
+        
+        const hintArea = document.getElementById('hint-area');
+        const revealArea = document.getElementById('reveal-area');
+        const materialNameEl = document.getElementById('material-name');
+        const materialFormulaEl = document.getElementById('material-formula');
+        const materialImageEl = document.getElementById('material-image');
+        const materialInfoEl = document.getElementById('material-info');
+
+        // --- FUNÇÕES DO JOGO ---
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function initGame() {
+            scoreTeam1 = 0;
+            scoreTeam2 = 0;
+            currentRound = 0;
+            availableSubstances = [...substancias];
+            shuffle(availableSubstances);
+            totalRoundsEl.textContent = totalSubstances;
+            updateScores();
+            startNextRound();
+        }
+
+        function startNextRound() {
+            if (availableSubstances.length === 0) {
+                endGame();
+                return;
+            }
+
+            currentRound++;
+            hintIndex = 0;
+            currentSubstance = availableSubstances.pop();
+
+            roundNumberEl.textContent = currentRound;
+            hintArea.classList.remove('hidden');
+            revealArea.classList.add('hidden');
+            revealArea.classList.remove('animate-reveal');
+            nextHintBtn.disabled = false;
+            revealAnswerBtn.disabled = false;
+            nextHintBtn.textContent = "Mostrar 1ª Dica";
+            hintTextEl.innerHTML = `Rodada <b>${currentRound}</b> pronta. <br> Clique para ver a primeira dica.`;
+        }
+
+        function showNextHint() {
+            if (!currentSubstance || hintIndex >= currentSubstance.dicas.length) {
+                return;
+            }
+            
+            if (hintIndex === 0) {
+                nextHintBtn.textContent = "Próxima Dica";
+            }
+
+            hintTextEl.textContent = currentSubstance.dicas[hintIndex];
+            const points = 5 - hintIndex;
+            nextHintBtn.textContent = `Próxima Dica (${points - 1} pts)`;
+            hintIndex++;
+
+            if (hintIndex >= currentSubstance.dicas.length) {
+                nextHintBtn.disabled = true;
+                nextHintBtn.textContent = "Fim das dicas";
+            }
+        }
+
+        function revealAnswer() {
+            if (!currentSubstance) return;
+
+            materialNameEl.textContent = currentSubstance.nome;
+            materialFormulaEl.textContent = currentSubstance.formula;
+            materialImageEl.src = currentSubstance.imagem;
+            materialInfoEl.textContent = currentSubstance.info;
+
+            hintArea.classList.add('hidden');
+            revealArea.classList.remove('hidden');
+            revealArea.classList.add('animate-reveal');
+            
+            nextHintBtn.disabled = true;
+            revealAnswerBtn.disabled = true;
+        }
+
+        function addScore(team, points) {
+            if (team === 1) {
+                scoreTeam1 += points;
+            } else {
+                scoreTeam2 += points;
+            }
+            updateScores();
+        }
+
+        function updateScores() {
+            score1El.textContent = scoreTeam1;
+            score2El.textContent = scoreTeam2;
+        }
+        
+        function endGame() {
+            const winner = scoreTeam1 > scoreTeam2 ? "Grupo 1" : (scoreTeam2 > scoreTeam1 ? "Grupo 2" : "Empate");
+            let message = `Fim de Jogo! `;
+            if (winner !== "Empate") {
+                message += `O vencedor é o ${winner}!`;
+            } else {
+                message = "O jogo terminou em empate!";
+            }
+            
+            hintArea.classList.remove('hidden');
+            revealArea.classList.add('hidden');
+            hintTextEl.innerHTML = `<span class="text-2xl font-bold">${message}</span><br> Placar Final: Grupo 1 (${scoreTeam1}) x Grupo 2 (${scoreTeam2})`;
+            
+            nextHintBtn.disabled = true;
+            revealAnswerBtn.disabled = true;
+            nextHintBtn.textContent = "Fim de Jogo";
+        }
+
+
+        // --- EVENT LISTENERS ---
+        nextRoundBtn.addEventListener('click', startNextRound);
+        restartGameBtn.addEventListener('click', initGame);
+        revealAnswerBtn.addEventListener('click', revealAnswer);
+        nextHintBtn.addEventListener('click', showNextHint);
+
+        // --- INICIAR O JOGO ---
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>
